@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "name": "NovelDock Official",
+  "description": "Official provider registry for NovelDock.",
+  "status": "active",
+  "updated": 1753526400,
+  "providers": [
+    {
+      "id": "wuxiabox",
+      "name": "WuxiaBox",
+      "lang": "en",
+      "baseUrl": "https://www.wuxiabox.com",
+      "file": "providers/wuxiabox.js",
+      "icon": "icons/wuxiabox.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "royalroad",
+      "name": "Royal Road",
+      "lang": "en",
+      "baseUrl": "https://www.royalroad.com",
+      "file": "providers/royalroad_provider.js",
+      "icon": "icons/royalroad.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "allnovel",
+      "name": "AllNovel",
+      "lang": "en",
+      "baseUrl": "https://allnovel.org",
+      "file": "providers/allnovel_provider.js",
+      "icon": "icons/allnovel.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "annasarchive",
+      "name": "Annas Archive",
+      "lang": "en",
+      "baseUrl": "https://annas-archive.gl",
+      "file": "providers/annasarchive_provider.js",
+      "icon": "icons/annasarchive.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    }
+  ]
+}
