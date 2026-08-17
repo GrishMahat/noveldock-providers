@@ -8,6 +8,15 @@ module.exports = {
   lang: "en",
   baseUrl: "https://annas-archive.gl",
 
+  getProviderMetadata: function() {
+    return {
+      hasMainPage: true,
+      hasSearch: true,
+      hasLatest: false,
+      hasFilters: false
+    };
+  },
+
   // --- Main Page ---
   getMainPageUrl: function (page) {
     return (

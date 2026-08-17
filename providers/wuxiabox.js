@@ -3,6 +3,109 @@
 
 var baseUrl = "https://www.wuxiabox.com";
 
+var wuxiaGenres = [
+  { name: "All", slug: "all" },
+  { name: "Fan-Fiction", slug: "fan-fiction" },
+  { name: "Faloo", slug: "faloo" },
+  { name: "Action", slug: "action" },
+  { name: "Adventure", slug: "adventure" },
+  { name: "Comedy", slug: "comedy" },
+  { name: "Contemporary Romance", slug: "contemporary-romance" },
+  { name: "Drama", slug: "drama" },
+  { name: "Eastern Fantasy", slug: "eastern-fantasy" },
+  { name: "Fantasy", slug: "fantasy" },
+  { name: "Fantasy Romance", slug: "fantasy-romance" },
+  { name: "Gender Bender", slug: "gender-bender" },
+  { name: "Harem", slug: "harem" },
+  { name: "Historical", slug: "historical" },
+  { name: "Horror", slug: "horror" },
+  { name: "Josei", slug: "josei" },
+  { name: "Lolicon", slug: "lolicon" },
+  { name: "Magical Realism", slug: "magical-realism" },
+  { name: "Martial Arts", slug: "martial-arts" },
+  { name: "Mecha", slug: "mecha" },
+  { name: "Mystery", slug: "mystery" },
+  { name: "Psychological", slug: "psychological" },
+  { name: "Romance", slug: "romance" },
+  { name: "School Life", slug: "school-life" },
+  { name: "Sci-fi", slug: "sci-fi" },
+  { name: "Seinen", slug: "seinen" },
+  { name: "Shoujo", slug: "shoujo" },
+  { name: "Shounen", slug: "shounen" },
+  { name: "Shounen Ai", slug: "shounen-ai" },
+  { name: "Slice of Life", slug: "slice-of-life" },
+  { name: "Sports", slug: "sports" },
+  { name: "Supernatural", slug: "supernatural" },
+  { name: "Tragedy", slug: "tragedy" },
+  { name: "Video Games", slug: "video-games" },
+  { name: "Wuxia", slug: "wuxia" },
+  { name: "Xianxia", slug: "xianxia" },
+  { name: "Xuanhuan", slug: "xuanhuan" },
+  { name: "Yaoi", slug: "yaoi" },
+  { name: "Two-dimensional", slug: "two-dimensional" },
+  { name: "Erciyuan", slug: "erciyuan" },
+  { name: "Game", slug: "game" },
+  { name: "Military", slug: "military" },
+  { name: "Urban Life", slug: "urban-life" },
+  { name: "Yuri", slug: "yuri" },
+  { name: "Chinese", slug: "chinese" },
+  { name: "Japanese", slug: "japanese" },
+  { name: "Hentai", slug: "hentai" },
+  { name: "Isekai", slug: "isekai" },
+  { name: "Magic", slug: "magic" },
+  { name: "Shoujo Ai", slug: "shoujo-ai" },
+  { name: "Urban", slug: "urban" },
+  { name: "Virtual Reality", slug: "virtual-reality" },
+  { name: "Wuxia Xianxia", slug: "wuxia_xianxia" },
+  { name: "Official Circles", slug: "official_circles" },
+  { name: "Science Fiction", slug: "science_fiction" },
+  { name: "Suspense Thriller", slug: "suspense_thriller" },
+  { name: "Travel Through Time", slug: "travel_through_time" }
+];
+
+var wuxiaStatus = ["All", "Completed", "Ongoing"];
+var wuxiaSort = [
+  { name: "Popular", slug: "onclick" },
+  { name: "New", slug: "newstime" },
+  { name: "Updates", slug: "lastdotime" }
+];
+
+function wuxiaFilters() {
+  return {
+    genre: {
+      index: 0,
+      slug: "all"
+    },
+    status: {
+      index: 0,
+      value: "all"
+    },
+    sort: {
+      index: 1,
+      slug: "newstime"
+    }
+  };
+}
+
+function applyWuxiaFilters(filters, current) {
+  var f = filters || {};
+  var out = wuxiaFilters();
+  if (typeof f.genre === "number" && f.genre >= 0 && f.genre < wuxiaGenres.length) {
+    out.genre = { index: f.genre, slug: wuxiaGenres[f.genre].slug };
+  }
+  if (typeof f.status === "number" && f.status >= 0 && f.status < wuxiaStatus.length) {
+    out.status = { index: f.status, value: wuxiaStatus[f.status] };
+  }
+  if (f.sort instanceof Array && f.sort.length >= 1 && typeof f.sort[0] === "number") {
+    var s = f.sort[0];
+    if (s >= 0 && s < wuxiaSort.length) {
+      out.sort = { index: s, slug: wuxiaSort[s].slug };
+      if (f.sort.length >= 2) out.sort.ascending = !!f.sort[1];
+    }
+  }
+  return out;
+}
+
 function fixUrl(url) {
   if (!url) return null;
   if (url.startsWith('http')) return url;
@@ -18,9 +121,53 @@ module.exports = {
   lang: "en",
   baseUrl: baseUrl,
 
+  getProviderMetadata: function() {
+    return {
+      hasMainPage: true,
+      hasSearch: true,
+      hasChapterApi: true,
+      hasLatest: true,
+      hasFilters: true
+    };
+  },
+
   // --- Browse ---
-  getMainPageUrl: function(page) {
-    return "https://www.wuxiabox.com/list/all/all-newstime-" + (page || 0) + ".html";
+  getMainPageUrl: function(page, filters) {
+    var f = applyWuxiaFilters(filters);
+    return baseUrl + "/list/" + f.genre.slug + "/" + f.status.value + "-" + f.sort.slug + "-" + ((page || 1) - 1) + ".html";
+  },
+
+  // --- Latest ---
+  getLatestUrl: function(page) {
+    return baseUrl + "/list/all/all-lastdotime-" + ((page || 1) - 1) + ".html";
+  },
+
+  // --- Filters ---
+  getFilters: function() {
+    return [
+      {
+        type: "select",
+        id: "genre",
+        name: "Genre",
+        options: wuxiaGenres.map(function(g) { return g.name; }),
+        defaultIndex: 0
+      },
+      {
+        type: "select",
+        id: "status",
+        name: "Status",
+        options: wuxiaStatus,
+        defaultIndex: 0
+      },
+      {
+        type: "sort",
+        id: "sort",
+        name: "Sort by",
+        options: wuxiaSort.map(function(s) { return s.name; }),
+        defaultIndex: 1,
+        defaultAscending: false
+      }
+    ];
   },
 
   // --- Search ---

@@ -12,7 +12,7 @@
       "baseUrl": "https://www.wuxiabox.com",
       "file": "providers/wuxiabox.js",
       "icon": "icons/wuxiabox.png",
-      "version": "1.0.0",
+      "version": "1.2.0",
       "author": "noveldock"
     },
     {
@@ -29,10 +29,10 @@
       "id": "allnovel",
       "name": "AllNovel",
       "lang": "en",
-      "baseUrl": "https://allnovel.org",
+      "baseUrl": "https://novelfull.com",
       "file": "providers/allnovel_provider.js",
       "icon": "icons/allnovel.png",
-      "version": "1.0.0",
+      "version": "1.2.0",
       "author": "noveldock"
     },
     {

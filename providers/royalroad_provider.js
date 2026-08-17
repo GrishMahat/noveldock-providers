@@ -8,6 +8,15 @@ module.exports = {
   lang: "en",
   baseUrl: "https://www.royalroad.com",
 
+  getProviderMetadata: function() {
+    return {
+      hasMainPage: false,
+      hasSearch: true,
+      hasLatest: false,
+      hasFilters: false
+    };
+  },
+
   // --- Search ---
   getSearchUrl: function(query, page) {
     var encoded = encodeURIComponent(query);
