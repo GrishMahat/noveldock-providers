@@ -1,5 +1,5 @@
-// WuxiaBox Provider — wuxiabox.com
-// Ported from the original Kotlin WuxiaBoxProvider
+// WuxiaBox provider for wuxiabox.com
+// Ported from the original Kotlin WuxiaBoxProvider.
 
 var baseUrl = "https://www.wuxiabox.com";
 
@@ -70,31 +70,22 @@ var wuxiaSort = [
   { name: "Updates", slug: "lastdotime" }
 ];
 
-function wuxiaFilters() {
-  return {
-    genre: {
-      index: 0,
-      slug: "all"
-    },
-    status: {
-      index: 0,
-      value: "all"
-    },
-    sort: {
-      index: 1,
-      slug: "newstime"
-    }
+function applyWuxiaFilters(filters) {
+  var out = {
+    genre: { index: 0, slug: "all" },
+    status: { index: 0, value: "all" },
+    sort: { index: 1, slug: "newstime" }
   };
-}
-
-function applyWuxiaFilters(filters, current) {
   var f = filters || {};
-  var out = wuxiaFilters();
   if (typeof f.genre === "number" && f.genre >= 0 && f.genre < wuxiaGenres.length) {
     out.genre = { index: f.genre, slug: wuxiaGenres[f.genre].slug };
   }
   if (typeof f.status === "number" && f.status >= 0 && f.status < wuxiaStatus.length) {
-    out.status = { index: f.status, value: wuxiaStatus[f.status] };
+    // The site only accepts the lowercase "all" slug for the unfiltered
+    // status; "All" (capitalized) returns an empty list page.
+    var statusValue = wuxiaStatus[f.status];
+    if (statusValue === "All") statusValue = "all";
+    out.status = { index: f.status, value: statusValue };
   }
   if (f.sort instanceof Array && f.sort.length >= 1 && typeof f.sort[0] === "number") {
     var s = f.sort[0];
@@ -106,72 +97,57 @@ function applyWuxiaFilters(filters, current) {
   return out;
 }
 
-function fixUrl(url) {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  if (url.startsWith('//')) return 'https:' + url;
-  if (url.startsWith('/')) return baseUrl + url;
-  return baseUrl + '/' + url;
-}
-
-module.exports = {
-  // --- Metadata ---
+register({
   id: "wuxiabox",
   name: "WuxiaBox",
   lang: "en",
   baseUrl: baseUrl,
 
-  getProviderMetadata: function() {
-    return {
-      hasMainPage: true,
-      hasSearch: true,
-      hasChapterApi: true,
-      hasLatest: true,
-      hasFilters: true
-    };
-  },
+  // WuxiaBox search is ECMS keyword-only, so genre/status/sort cannot be
+  // expressed in search. Let the app run normal search when filters are
+  // active instead of sending them into a search URL that ignores (or
+  // breaks on) them.
+  flags: { searchFilters: false },
+
+  filters: [
+    {
+      type: "select",
+      id: "genre",
+      name: "Genre",
+      options: wuxiaGenres.map(function(g) { return g.name; }),
+      defaultIndex: 0
+    },
+    {
+      type: "select",
+      id: "status",
+      name: "Status",
+      options: wuxiaStatus,
+      defaultIndex: 0
+    },
+    {
+      type: "sort",
+      id: "sort",
+      name: "Sort by",
+      options: wuxiaSort.map(function(s) { return s.name; }),
+      defaultIndex: 1,
+      defaultAscending: false
+    }
+  ],
 
   // --- Browse ---
-  getMainPageUrl: function(page, filters) {
+  mainPageUrl: function(page, filters) {
     var f = applyWuxiaFilters(filters);
     return baseUrl + "/list/" + f.genre.slug + "/" + f.status.value + "-" + f.sort.slug + "-" + ((page || 1) - 1) + ".html";
   },
 
-  // --- Latest ---
-  getLatestUrl: function(page) {
-    return baseUrl + "/list/all/all-lastdotime-" + ((page || 1) - 1) + ".html";
-  },
-
-  // --- Filters ---
-  getFilters: function() {
-    return [
-      {
-        type: "select",
-        id: "genre",
-        name: "Genre",
-        options: wuxiaGenres.map(function(g) { return g.name; }),
-        defaultIndex: 0
-      },
-      {
-        type: "select",
-        id: "status",
-        name: "Status",
-        options: wuxiaStatus,
-        defaultIndex: 0
-      },
-      {
-        type: "sort",
-        id: "sort",
-        name: "Sort by",
-        options: wuxiaSort.map(function(s) { return s.name; }),
-        defaultIndex: 1,
-        defaultAscending: false
-      }
-    ];
+  // --- Latest (respects genre/status; always sorted by last update) ---
+  latestUrl: function(page, filters) {
+    var f = applyWuxiaFilters(filters);
+    return baseUrl + "/list/" + f.genre.slug + "/" + f.status.value + "-lastdotime-" + ((page || 1) - 1) + ".html";
   },
 
   // --- Search ---
-  getSearchConfig: function() {
+  searchConfig: function() {
     return {
       method: "POST",
       url: "https://www.wuxiabox.com/e/search/index.php",
@@ -191,37 +167,33 @@ module.exports = {
     };
   },
 
-  getSearchUrl: function(query, page) {
+  searchUrl: function(query, page, filters) {
     var encoded = encodeURIComponent(query);
     return "https://www.wuxiabox.com/e/search/index.php?show=title&tempid=1&tbname=news&keyboard=" + encoded;
   },
 
-  parseSearchResults: function(html) {
+  searchResults: function(html) {
     var results = [];
 
-    // Parse search result items
     // Each item: <li class="novel-item"> with <a title="..." href="..."> and <img>
-    var items = html.match(/<li class="novel-item">[\s\S]*?<\/li>/g) || [];
-
+    var items = matchAll(html, /<li class="novel-item">[\s\S]*?<\/li>/g);
     for (var i = 0; i < items.length; i++) {
-      var item = items[i];
+      var item = items[i][0];
 
       // Extract title from a[title] attribute or h4.novel-title
-      var titleMatch = item.match(/<a[^>]*title="([^"]*)"[^>]*>/);
-      var title = titleMatch ? titleMatch[1] : "";
+      var title = attr(item, "title") || "";
       if (!title) {
-        var h4Match = item.match(/<h4 class="novel-title">([^<]*)<\/h4>/);
+        var h4Match = /<h4 class="novel-title">([^<]*)<\/h4>/.exec(item);
         title = h4Match ? h4Match[1].trim() : "";
       }
 
       // Extract URL from a href
-      var hrefMatch = item.match(/<a[^>]*href="([^"]*)"[^>]*>/);
-      var url = hrefMatch ? fixUrl(hrefMatch[1]) : "";
+      var href = attr(item, "href");
+      var url = href ? absUrl(baseUrl, href) : "";
 
       // Extract cover image from img data-src or src
-      var coverMatch = item.match(/<img[^>]*data-src="([^"]*)"/);
-      if (!coverMatch) coverMatch = item.match(/<img[^>]*src="([^"]*)"/);
-      var cover = coverMatch ? fixUrl(coverMatch[1]) : null;
+      var cover = attr(item, "data-src") || attr(item, "src");
+      cover = cover ? absUrl(baseUrl, cover) : null;
 
       if (title && url) {
         results.push({
@@ -234,7 +206,7 @@ module.exports = {
       }
     }
 
-    // Check if there's a next page (if we got results, assume there might be more)
+    // Next page: assume there is one when the page is full.
     var hasNextPage = results.length >= 20;
 
     return {
@@ -244,49 +216,49 @@ module.exports = {
   },
 
   // --- Novel Info ---
-  getNovelInfoUrl: function(novelUrl) {
-    return fixUrl(novelUrl) || novelUrl;
+  novelInfoUrl: function(novelUrl) {
+    return absUrl(baseUrl, novelUrl) || novelUrl;
   },
 
-  parseNovelInfo: function(html) {
-    // Title: <h1 class="novel-title">
-    var titleMatch = html.match(/<h1 class="novel-title">([^<]*)<\/h1>/);
-    var title = titleMatch ? titleMatch[1].trim() : "";
+  novelInfo: function(html) {
+    // Title: <h1 itemprop="name" class="novel-title text2row">...
+    var title = first(html, /<h1[^>]*class="[^"]*novel-title[^"]*"[^>]*>([\s\S]*?)<\/h1>/) || "";
 
     // Author: <div class="author"> with [itemprop=author]
-    var authorMatch = html.match(/<div class="author"[^>]*>[\s\S]*?itemprop="author"[^>]*>([^<]*)<\/span>/);
-    var author = authorMatch ? authorMatch[1].trim() : null;
+    var author = first(html, /<div class="author"[^>]*>[\s\S]*?itemprop="author"[^>]*>([^<]*)<\/span>/);
+    author = author ? author.trim() : null;
 
     // Synopsis: meta[itemprop=description] content attribute
-    var synopsisMatch = html.match(/<meta[^>]*itemprop="description"[^>]*content="([^"]*)"/);
-    var description = synopsisMatch ? synopsisMatch[1] : "";
+    var description = first(html, /<meta[^>]*itemprop="description"[^>]*content="([^"]*)"/) || "";
     if (!description) {
-      var descMatch = html.match(/<div class="summary[^"]*"[^>]*>([\s\S]*?)<\/div>/);
-      description = descMatch ? descMatch[1].replace(/<[^>]*>/g, '').trim() : "";
+      var descMatch = /<div class="summary[^"]*"[^>]*>([\s\S]*?)<\/div>/.exec(html);
+      description = descMatch ? textOf(descMatch[1]) : "";
     }
 
-    // Cover: div.fixed-img img data-src or src
-    var coverMatch = html.match(/<div class="fixed-img">[\s\S]*?<img[^>]*data-src="([^"]*)"/);
-    if (!coverMatch) coverMatch = html.match(/<div class="fixed-img">[\s\S]*?<img[^>]*src="([^"]*)"/);
-    var cover = coverMatch ? fixUrl(coverMatch[1]) : null;
+    // Cover: div.fixed-img img data-src (or src)
+    var cover = null;
+    var coverDiv = first(html, /(<div class="fixed-img">[\s\S]*?<img[^>]*>)/);
+    if (coverDiv) {
+      var coverSrc = attr(coverDiv, "data-src") || attr(coverDiv, "src");
+      cover = coverSrc ? absUrl(baseUrl, coverSrc) : null;
+    }
 
-    // Status: div.header-stats with "Ongoing" or "Completed"
-    var statusMatch = html.match(/<div class="header-stats">[\s\S]*?<strong>(Ongoing|Completed)<\/strong>/);
-    var status = statusMatch ? statusMatch[1] : null;
+    // Status: <strong>Ongoing</strong><small>Status</small> in header-stats
+    var status = first(html, /<strong[^>]*>(Ongoing|Completed)<\/strong>\s*<small>Status<\/small>/);
 
-    // Extract bookId from URL for chapter loading
-    var bookIdMatch = html.match(/\/([^\/]+)\.html/);
-    var bookId = bookIdMatch ? bookIdMatch[1] : null;
+    // Extract bookId from the "start reading" link:
+    // <a id="readchapterbtn" href="/novel/trxs10939_1.html" ...>
+    var bookId = first(html, /<a id="readchapterbtn"[^>]*href="\/novel\/([a-z0-9]+)_/);
 
-    // Genres/tags
+    // Genres/tags: <a ... class="property-item">Fan-Fiction</a>
     var genres = [];
-    var tagMatches = html.match(/<a[^>]*class="[^"]*tag[^"]*"[^>]*>([^<]*)<\/a>/g) || [];
+    var tagMatches = matchAll(html, /<a[^>]*class="property-item"[^>]*>([^<]*)<\/a>/g);
     for (var i = 0; i < tagMatches.length; i++) {
-      var tagText = tagMatches[i].replace(/<[^>]*>/g, '').trim();
+      var tagText = tagMatches[i][1].trim();
       if (tagText) genres.push(tagText);
     }
 
-    // Chapters will be loaded separately via AJAX
+    // Chapters are loaded separately via AJAX
     var chapters = [];
 
     return {
@@ -302,20 +274,21 @@ module.exports = {
   },
 
   // --- Chapter List (AJAX) ---
-  getChaptersApiUrl: function(bookId, page) {
+  chaptersApiUrl: function(bookId, page) {
     return "https://www.wuxiabox.com/e/extend/fy.php?page=" + (page || 0) + "&wjm=" + bookId + "&X-Requested-With=XMLHttpRequest&_=" + Date.now();
   },
 
-  parseChapterList: function(html) {
+  chapterList: function(html) {
     var chapters = [];
-    var items = html.match(/<li[^>]*>[\s\S]*?<\/li>/g) || [];
+    var items = matchAll(html, /<li[^>]*>[\s\S]*?<\/li>/g);
     for (var i = 0; i < items.length; i++) {
-      var linkMatch = items[i].match(/<a[^>]*href="([^"]*)"[^>]*>/);
-      var titleMatch = items[i].match(/<strong class="chapter-title">([^<]*)<\/strong>/);
+      var item = items[i][0];
+      var linkMatch = /<a[^>]*href="([^"]*)"[^>]*>/.exec(item);
+      var titleMatch = /<strong class="chapter-title">([^<]*)<\/strong>/.exec(item);
       if (linkMatch && titleMatch) {
         chapters.push({
           name: titleMatch[1].trim(),
-          url: fixUrl(linkMatch[1]),
+          url: absUrl(baseUrl, linkMatch[1]),
           date: null,
         });
       }
@@ -324,12 +297,12 @@ module.exports = {
   },
 
   // --- Chapter Content ---
-  getChapterContentUrl: function(chapterUrl) {
+  chapterContentUrl: function(chapterUrl) {
     return chapterUrl;
   },
 
-  parseChapterContent: function(html) {
-    // Content is in div.chapter-content — handle nested divs properly
+  chapterContent: function(html) {
+    // Content is in div.chapter-content. Handle nested divs by counting depth.
     var startTag = '<div class="chapter-content">';
     var startIdx = html.indexOf(startTag);
     var content = html;
@@ -367,15 +340,13 @@ module.exports = {
 
     // Extract images
     var images = [];
-    var imgMatches = content.match(/<img[^>]*src="([^"]*)"[^>]*>/g) || [];
+    var imgMatches = matchAll(content, /<img[^>]*src="([^"]*)"[^>]*>/g);
     for (var i = 0; i < imgMatches.length; i++) {
-      var srcMatch = imgMatches[i].match(/src="([^"]*)"/);
-      if (srcMatch) {
-        images.push({
-          url: fixUrl(srcMatch[1]) || srcMatch[1],
-          alt: null,
-        });
-      }
+      var src = imgMatches[i][1];
+      images.push({
+        url: absUrl(baseUrl, src) || src,
+        alt: null,
+      });
     }
 
     return {
@@ -383,9 +354,4 @@ module.exports = {
       images: images,
     };
   },
-
-  // --- Optional: Cloudflare hint ---
-  isCloudflare: function(url, statusCode, responseHeaders) {
-    return statusCode === 403;
-  },
-};
+});

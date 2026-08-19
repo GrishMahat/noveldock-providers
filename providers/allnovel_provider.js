@@ -1,4 +1,4 @@
-// NovelFull Provider — novelfull.com
+// NovelFull provider for novelfull.com
 // Parses NovelFull's HTML for novel search, info, and chapter content.
 //
 // Notes on chapter URLs:
@@ -23,23 +23,9 @@ var novelfullGenres = [
 var novelfullLists = ["Hot Novel", "Latest Release", "Completed Novel", "Most Popular"];
 var novelfullListUrls = ["hot-novel", "latest-release-novel", "completed-novel", "most-popular"];
 
-// Module-level state and helpers: provider functions are invoked with
+// Module-level state and helpers. Provider functions are invoked with
 // apply(null, ...), so `this` is not available inside them.
 var novelId = null;
-
-function fixPosterUrl(url) {
-  if (!url) return url;
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  if (url.startsWith("/")) return novelfullBase + url;
-  return novelfullBase + "/" + url;
-}
-
-function novelfullAbs(url) {
-  if (!url) return url;
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  if (url.startsWith("/")) return novelfullBase + url;
-  return novelfullBase + "/" + url;
-}
 
 function novelfullMainUrl(page, filters) {
   var f = filters || {};
@@ -54,69 +40,42 @@ function novelfullMainUrl(page, filters) {
   return novelfullBase + "/" + novelfullListUrls[listIndex] + "?page=" + p;
 }
 
-module.exports = {
-  // --- Metadata ---
+register({
   id: "allnovel",
   name: "AllNovel",
   lang: "en",
   baseUrl: novelfullBase,
-  version: "1.2.0",
+  version: "1.3.0",
 
-  getProviderMetadata: function() {
-    return {
-      hasMainPage: true,
-      hasSearch: true,
-      hasChapterApi: true,
-      hasLatest: true,
-      hasFilters: true
-    };
-  },
-
-  // Internal state: holds the numeric novel ID extracted from parseNovelInfo
-  _novelId: null,
+  filters: [
+    {
+      type: "select",
+      id: "list",
+      name: "List",
+      options: novelfullLists,
+      defaultIndex: 0
+    },
+    {
+      type: "select",
+      id: "genre",
+      name: "Genre",
+      options: novelfullGenres,
+      defaultIndex: 0
+    }
+  ],
 
   // --- Main Page ---
-  getMainPageUrl: function(page, filters) {
+  mainPageUrl: function(page, filters) {
     return novelfullMainUrl(page, filters);
   },
 
   // --- Latest ---
-  getLatestUrl: function(page) {
+  latestUrl: function(page) {
     return novelfullBase + "/latest-release-novel?page=" + (page || 1);
   },
 
-  // --- Filters ---
-  getFilters: function() {
-    return [
-      {
-        type: "select",
-        id: "list",
-        name: "List",
-        options: novelfullLists,
-        defaultIndex: 0
-      },
-      {
-        type: "select",
-        id: "genre",
-        name: "Genre",
-        options: novelfullGenres,
-        defaultIndex: 0
-      }
-    ];
-  },
-
   // --- Search ---
-  search: function (query, page) {
-    return {
-      url:
-        novelfullBase + "/search?keyword=" +
-        encodeURIComponent(query) +
-        "&page=" +
-        (page || 1),
-    };
-  },
-
-  getSearchUrl: function (query, page) {
+  searchUrl: function(query, page, filters) {
     return (
       novelfullBase + "/search?keyword=" +
       encodeURIComponent(query) +
@@ -125,7 +84,7 @@ module.exports = {
     );
   },
 
-  parseSearchResults: function (html) {
+  searchResults: function(html) {
     var results = [];
 
     // Each result row: <div class="row"><div class="col-xs-2"><div><img
@@ -140,7 +99,7 @@ module.exports = {
       var url = match[2];
       if (!title || !url) continue;
 
-      var cover = fixPosterUrl(match[1]);
+      var cover = absUrl(novelfullBase, match[1]);
 
       // Author appears right after the anchor, outside match[0]; look in a
       // bounded region past the end of this row.
@@ -150,13 +109,13 @@ module.exports = {
           html.slice(match.index, match.index + match[0].length + 1500)
         );
       if (authorRe) {
-        author = authorRe[1].replace(/<[^>]*>/g, "").trim() || null;
+        author = textOf(authorRe[1]) || null;
       }
 
       results.push({
         title: title,
-        url: novelfullAbs(url),
-        cover: novelfullAbs(cover),
+        url: absUrl(novelfullBase, url),
+        cover: absUrl(novelfullBase, cover),
         author: author
       });
     }
@@ -169,19 +128,17 @@ module.exports = {
   },
 
   // --- Novel Info ---
-  getNovelInfoUrl: function (novelUrl) {
-    return novelfullAbs(novelUrl);
+  novelInfoUrl: function(novelUrl) {
+    return absUrl(novelfullBase, novelUrl);
   },
 
-  parseNovelInfo: function (html) {
+  novelInfo: function(html) {
     // Title
     var titleMatch =
       /<h3[^>]*class="[^"]*title[^"]*"[^>]*>([\s\S]*?)<\/h3>/i.exec(html);
-    var title = titleMatch
-      ? titleMatch[1].replace(/<[^>]*>/g, "").trim()
-      : "";
+    var title = titleMatch ? textOf(titleMatch[1]) : "";
 
-    // Numeric novel ID for AJAX chapter fetch — store for getChaptersApiUrl
+    // Numeric novel ID for the AJAX chapter fetch; stored for getChaptersApiUrl
     var novelIdMatch =
       /id="rating"[^>]*data-novel-id="([^"]*)"/i.exec(html);
     novelId = novelIdMatch ? novelIdMatch[1] : null;
@@ -194,7 +151,7 @@ module.exports = {
       var nameRe = /<a[^>]*>([\s\S]*?)<\/a>/gi;
       var nameMatch;
       while ((nameMatch = nameRe.exec(authorMatch[1])) !== null) {
-        var name = nameMatch[1].replace(/<[^>]*>/g, "").trim();
+        var name = textOf(nameMatch[1]);
         if (name) authorNames.push(name);
       }
       if (authorNames.length > 0) author = authorNames.join(", ");
@@ -211,16 +168,14 @@ module.exports = {
           html
         );
     }
-    var cover = coverMatch ? fixPosterUrl(coverMatch[1]) : null;
+    var cover = coverMatch ? absUrl(novelfullBase, coverMatch[1]) : null;
 
     // Synopsis
     var synopsisMatch =
       /<div[^>]*class="[^"]*desc-text[^"]*"[^>]*>([\s\S]*?)<\/div>/i.exec(
         html
       );
-    var description = synopsisMatch
-      ? synopsisMatch[1].replace(/<[^>]*>/g, "").trim()
-      : "";
+    var description = synopsisMatch ? textOf(synopsisMatch[1]) : "";
 
     // Genres / tags
     var genres = [];
@@ -229,16 +184,14 @@ module.exports = {
       var tagRe = /<a[^>]*>([\s\S]*?)<\/a>/gi;
       var tagMatch;
       while ((tagMatch = tagRe.exec(genreMatch[1])) !== null) {
-        var tag = tagMatch[1].replace(/<[^>]*>/g, "").trim();
+        var tag = textOf(tagMatch[1]);
         if (tag) genres.push(tag);
       }
     }
 
     // Status
     var statusMatch = /Status:<\/h3>\s*<a[^>]*>([\s\S]*?)<\/a>/i.exec(html);
-    var status = statusMatch
-      ? statusMatch[1].replace(/<[^>]*>/g, "").trim()
-      : null;
+    var status = statusMatch ? textOf(statusMatch[1]) : null;
 
     // Rating (site shows 0-10 float → scale to 0-1000) and people voted
     // "Rating: <strong><span>8.6</span></strong>/10 from <strong><span>256</span> ratings</strong>"
@@ -273,7 +226,7 @@ module.exports = {
   // bookId = slug from URL, page = pagination index (starts at 0).
   // The response contains the full chapter list (753+ entries) in one go,
   // so only page 0 is fetched.
-  getChaptersApiUrl: function (bookId, page) {
+  chaptersApiUrl: function(bookId, page) {
     if (!novelId || page > 0) return null;
     return (
       novelfullBase + "/ajax-chapter-option?novelId=" + novelId
@@ -283,18 +236,18 @@ module.exports = {
   // Parses the AJAX chapter list HTML response.
   // <select id="chapter-nav"><option value="/slug/chapter-N.html">Name</option></select>
   // Relative urls are resolved to absolute against the baseUrl.
-  parseChapterList: function (html) {
+  chapterList: function(html) {
     var chapters = [];
 
     var optionRe = /<option[^>]*value="([^"]*)"[^>]*>([\s\S]*?)<\/option>/gi;
     var match;
     while ((match = optionRe.exec(html)) !== null) {
       var url = match[1];
-      var name = match[2].replace(/<[^>]*>/g, "").trim();
+      var name = textOf(match[2]);
       if (url) {
         chapters.push({
           name: name || "Untitled",
-          url: novelfullAbs(url)
+          url: absUrl(novelfullBase, url)
         });
       }
     }
@@ -303,11 +256,11 @@ module.exports = {
   },
 
   // --- Chapter Content ---
-  getChapterContentUrl: function (chapterUrl) {
-    return novelfullAbs(chapterUrl);
+  chapterContentUrl: function(chapterUrl) {
+    return absUrl(novelfullBase, chapterUrl);
   },
 
-  parseChapterContent: function (html) {
+  chapterContent: function(html) {
     // Extract content from #chapter-content (or #chr-content). The content
     // block ends at <hr class="chapter-end">; a plain lazy </div> match
     // would stop at the first ad block inside the content.
@@ -347,21 +300,4 @@ module.exports = {
 
     return { html: content, images: images };
   },
-
-  // --- Helpers ---
-  // Kept for backward compatibility; parseSearchResults/parseNovelInfo use
-  // the module-level `fixPosterUrl` (functions are called with apply(null)).
-  _fixPosterUrl: function (url) {
-    if (!url) return url;
-    // Prevent zoom on images (matching Kotlin fullPosterFix)
-    return url
-      .replace(
-        "fc05345726d3e134d2f7187dc70f047b",
-        "4d27e0af8cf6e971f7ee3c995fc55190"
-      )
-      .replace(
-        "9798407846f8032e6a88fa71b2c62ce9",
-        "9c3d392ccc7c95187a8c6e37c6bdac6f"
-      );
-  },
-};
+});

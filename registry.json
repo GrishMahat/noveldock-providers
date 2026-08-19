@@ -3,7 +3,7 @@
   "name": "NovelDock Official",
   "description": "Official provider registry for NovelDock.",
   "status": "active",
-  "updated": 1753526400,
+  "updated": 1787156740,
   "providers": [
     {
       "id": "wuxiabox",
@@ -12,17 +12,7 @@
       "baseUrl": "https://www.wuxiabox.com",
       "file": "providers/wuxiabox.js",
       "icon": "icons/wuxiabox.png",
-      "version": "1.2.0",
-      "author": "noveldock"
-    },
-    {
-      "id": "royalroad",
-      "name": "Royal Road",
-      "lang": "en",
-      "baseUrl": "https://www.royalroad.com",
-      "file": "providers/royalroad_provider.js",
-      "icon": "icons/royalroad.png",
-      "version": "1.0.0",
+      "version": "1.4.0",
       "author": "noveldock"
     },
     {
@@ -32,16 +22,56 @@
       "baseUrl": "https://novelfull.com",
       "file": "providers/allnovel_provider.js",
       "icon": "icons/allnovel.png",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "author": "noveldock"
     },
     {
-      "id": "annasarchive",
-      "name": "Annas Archive",
+      "id": "wuxiaworld",
+      "name": "WuxiaWorld",
       "lang": "en",
-      "baseUrl": "https://annas-archive.gl",
-      "file": "providers/annasarchive_provider.js",
-      "icon": "icons/annasarchive.png",
+      "baseUrl": "https://www.wuxiaworld.com",
+      "file": "providers/wuxiaworld.js",
+      "icon": "icons/wuxiaworld.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "royalroad",
+      "name": "Royal Road",
+      "lang": "en",
+      "baseUrl": "https://www.royalroad.com",
+      "file": "providers/royalroad.js",
+      "icon": "icons/royalroad.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "novelbin",
+      "name": "NovelBin",
+      "lang": "en",
+      "baseUrl": "https://novelarrow.com",
+      "file": "providers/novelbin.js",
+      "icon": "icons/novelbin.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "freewebnovel",
+      "name": "FreeWebNovel",
+      "lang": "en",
+      "baseUrl": "https://freewebnovel.com",
+      "file": "providers/freewebnovel.js",
+      "icon": "icons/freewebnovel.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "mtlnovel",
+      "name": "MTLNovel",
+      "lang": "en",
+      "baseUrl": "https://mtlnovel.me",
+      "file": "providers/mtlnovel.js",
+      "icon": "icons/mtlnovel.png",
       "version": "1.0.0",
       "author": "noveldock"
     }
