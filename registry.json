@@ -42,7 +42,7 @@
       "baseUrl": "https://www.royalroad.com",
       "file": "providers/royalroad.js",
       "icon": "icons/royalroad.png",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "noveldock"
     },
     {
@@ -72,6 +72,206 @@
       "baseUrl": "https://mtlnovel.me",
       "file": "providers/mtlnovel.js",
       "icon": "icons/mtlnovel.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "novelfire",
+      "name": "NovelFire",
+      "lang": "en",
+      "baseUrl": "https://novelfire.net",
+      "file": "providers/novelfire.js",
+      "icon": "icons/novelfire.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "novelbuddy",
+      "name": "NovelBuddy",
+      "lang": "en",
+      "baseUrl": "https://novelbuddy.me",
+      "file": "providers/novelbuddy.js",
+      "icon": "icons/novelbuddy.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "wuxiaclick",
+      "name": "WuxiaClick",
+      "lang": "en",
+      "baseUrl": "https://wuxia.click",
+      "file": "providers/wuxiaclick.js",
+      "icon": "icons/wuxiaclick.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "novelphoenix",
+      "name": "NovelPhoenix",
+      "lang": "en",
+      "baseUrl": "https://novelphoenix.com",
+      "file": "providers/novelphoenix.js",
+      "icon": "icons/novelphoenix.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "novelfullnet",
+      "name": "NovelFull.NET",
+      "lang": "en",
+      "baseUrl": "https://novelfull.net",
+      "file": "providers/novelfullnet.js",
+      "icon": "icons/novelfullnet.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "fanmtl",
+      "name": "FanMTL",
+      "lang": "en",
+      "baseUrl": "https://www.fanmtl.com",
+      "file": "providers/fanmtl.js",
+      "icon": "icons/fanmtl.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "libread",
+      "name": "LibRead",
+      "lang": "en",
+      "baseUrl": "https://libread.com",
+      "file": "providers/libread.js",
+      "icon": "icons/libread.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "readnovelfull",
+      "name": "ReadNovelFull",
+      "lang": "en",
+      "baseUrl": "https://readnovelfull.com",
+      "file": "providers/readnovelfull.js",
+      "icon": "icons/readnovelfull.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "readonlinefreebook",
+      "name": "ReadOnlineFreeBook",
+      "lang": "en",
+      "baseUrl": "https://readonlinefreebook.com",
+      "file": "providers/readonlinefreebook.js",
+      "icon": "icons/readonlinefreebook.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "readfromnet",
+      "name": "ReadFromNet",
+      "lang": "en",
+      "baseUrl": "https://readfrom.net",
+      "file": "providers/readfromnet.js",
+      "icon": "icons/readfromnet.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "nobadnovel",
+      "name": "NoBadNovel",
+      "lang": "en",
+      "baseUrl": "https://www.nobadnovel.com",
+      "file": "providers/nobadnovel.js",
+      "icon": "icons/nobadnovel.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "pawread",
+      "name": "PawRead",
+      "lang": "en",
+      "baseUrl": "https://www.pawread.com",
+      "file": "providers/pawread.js",
+      "icon": "icons/pawread.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "fenrirrealm",
+      "name": "FenrirRealm",
+      "lang": "en",
+      "baseUrl": "https://fenrirealm.com",
+      "file": "providers/fenrirrealm.js",
+      "icon": "icons/fenrirrealm.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "hiraethtranslation",
+      "name": "HiraethTranslation",
+      "lang": "en",
+      "baseUrl": "https://hiraethtranslation.com",
+      "file": "providers/hiraethtranslation.js",
+      "icon": "icons/hiraethtranslation.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "luxonscans",
+      "name": "LuxonScans",
+      "lang": "en",
+      "baseUrl": "https://lunoxscans.com",
+      "file": "providers/luxonscans.js",
+      "icon": "icons/luxonscans.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "lnori",
+      "name": "Lnori",
+      "lang": "en",
+      "baseUrl": "https://lnori.com",
+      "file": "providers/lnori.js",
+      "icon": "icons/lnori.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "scrollerspub",
+      "name": "ScrollersPub",
+      "lang": "en",
+      "baseUrl": "https://www.scrollerspub.com",
+      "file": "providers/scrollerspub.js",
+      "icon": "icons/scrollerspub.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "lnmtl",
+      "name": "LnMTL",
+      "lang": "en",
+      "baseUrl": "https://lnmtl.com",
+      "file": "providers/lnmtl.js",
+      "icon": "icons/lnmtl.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "sonicmtl",
+      "name": "SonicMTL",
+      "lang": "en",
+      "baseUrl": "https://www.sonicmtl.com",
+      "file": "providers/sonicmtl.js",
+      "icon": "icons/sonicmtl.png",
+      "version": "1.0.0",
+      "author": "noveldock"
+    },
+    {
+      "id": "lightnoveltranslations",
+      "name": "Light Novel Translations",
+      "lang": "en",
+      "baseUrl": "https://lightnovelstranslations.com",
+      "file": "providers/lightnoveltranslations.js",
+      "icon": "icons/lightnoveltranslations.png",
       "version": "1.0.0",
       "author": "noveldock"
     }

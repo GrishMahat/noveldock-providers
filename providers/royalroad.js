@@ -67,6 +67,36 @@ var rrGenres = [
 // Module state. parseSearchResults needs to know which list we are parsing.
 var moduleMode = "search"; // "search" | "browse" | "latest"
 
+/// Inner HTML of every top-level <div> whose class list contains [marker],
+/// balancing nested divs (lazy `</div></div>` matching truncates cards).
+function rrBlocks(html, marker) {
+  var out = [];
+  var openRe = new RegExp(
+    '<div[^>]*class="[^"]*' + marker + '[^"]*"[^>]*>', 'gi'
+  );
+  var m;
+  while ((m = openRe.exec(html)) !== null) {
+    var pos = m.index + m[0].length;
+    var depth = 1;
+    var tag = /<\/?div\b[^>]*>/gi;
+    tag.lastIndex = pos;
+    var t;
+    var end = -1;
+    while ((t = tag.exec(html)) !== null) {
+      if (t[0].charAt(1) === "/") {
+        depth--;
+        if (depth === 0) { end = t.index; break; }
+      } else if (t[0].charAt(t[0].length - 2) !== "/") {
+        depth++;
+      }
+    }
+    if (end === -1) break;
+    out.push(html.substring(pos, end));
+    openRe.lastIndex = tag.lastIndex;
+  }
+  return out;
+}
+
 function rrRating(html) {
   // <span class="font-red-sunglo star ..." title="4.8" ...>
   var m = /<span[^>]*font-red-sunglo[^>]*title="([\d.]+)"/.exec(html);
@@ -83,10 +113,10 @@ function rrStatus(html) {
 
 function parseFictionItems(html) {
   var results = [];
-  var items = matchAll(html, /<div class="fiction-list-item[^"]*">[\s\S]*?<\/div>\s*<\/div>/g);
+  var items = rrBlocks(html, "fiction-list-item");
 
   for (var i = 0; i < items.length; i++) {
-    var item = items[i][0];
+    var item = items[i];
 
     // Title/url: h2.fiction-title > a (inside either .search-content or .col-sm-10)
     var titleMatch = /<h2 class="fiction-title">[\s\S]*?<a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/.exec(item);
@@ -118,7 +148,7 @@ register({
   name: "Royal Road",
   lang: "en",
   baseUrl: baseUrl,
-  version: "1.0.0",
+  version: "1.0.1",
 
   // The site's own list pages cover filters, but search is title-only.
   flags: { searchFilters: false },
@@ -238,9 +268,9 @@ register({
       cover = coverSrc ? absUrl(baseUrl, coverSrc) : null;
     }
 
-    // Synopsis: div.description > div (inner html → text)
+    // Synopsis: div.description > div (an input toggle may sit between).
     var description = "";
-    var descMatch = /<div[^>]*class="[^"]*description[^"]*"[^>]*>\s*<div[^>]*>([\s\S]*?)<\/div>\s*<\/div>/.exec(html);
+    var descMatch = /<div[^>]*class="[^"]*description[^"]*"[^>]*>[\s\S]*?<div[^>]*>([\s\S]*?)<\/div>\s*<\/div>/.exec(html);
     if (descMatch) description = textOf(descMatch[1]);
 
     // Author: h4.font-white > span > a
