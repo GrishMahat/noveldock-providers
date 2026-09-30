@@ -12,7 +12,7 @@
 //  - chapter content: GET  wuxiaworld.com/novel/<slug>/<chSlug>
 //
 // Contract notes:
-//  - searchConfig(query, page) returns {url, headers, body}, a raw binary
+//  - searchConfig(query, page, filters) returns {url, headers, body}, a raw binary
 //    gRPC-Web frame. The app POSTs it as bytes and feeds the response byte
 //    list to parseSearchResults (the engine's binary POST path).
 //  - browseConfig(mode, filters) is the same shape for browse/latest.
@@ -172,10 +172,11 @@ register({  id: "wuxiaworld",
   name: "WuxiaWorld",
   lang: "en",
   baseUrl: baseUrl,
-  version: "1.0.0",
+  version: "1.1.0",
 
-  // gRPC listing supports the full filter set, so search stays filter-free.
-  flags: { searchFilters: false },
+  // gRPC listing supports the full filter set, and SearchNovels takes
+  // title + filters in one request, so search is filter-aware too.
+  // (No searchFilters flag: it defaults to true.)
 
   filters: [
     { type: "select", id: "status", name: "Status", options: wwStatus, defaultIndex: 0 },
@@ -208,11 +209,28 @@ register({  id: "wuxiaworld",
   },
 
   // Search via POST gRPC; the query is baked into the proto payload.
-  searchConfig: function(query, page) {
+  // Declares (query, page, filters) so the app sends active search
+  // filters; status/genre/sort map exactly like browseConfig (the
+  // SearchNovels API takes title + filters in one request).
+  searchConfig: function(query, page, filters) {
+    var f = filters || {};
+    var status = -1;
+    var sortType = 1;
+    if (typeof f.status === "number" && f.status >= 0 && f.status < wwStatusValue.length) {
+      status = wwStatusValue[f.status];
+    }
+    if (f.sort instanceof Array && f.sort.length >= 1 && typeof f.sort[0] === "number") {
+      var s = f.sort[0];
+      if (s >= 0 && s < wwSortValue.length) sortType = wwSortValue[s];
+    }
+    var genres = null;
+    if (typeof f.genre === "number" && f.genre > 0 && f.genre < wwGenres.length) {
+      genres = [wwGenres[f.genre]];
+    }
     return {
       url: searchNovelsUrl,
       headers: grpcHeaders(),
-      body: searchRequest(query, -1, 1, 1, 20, null),
+      body: searchRequest(query, status, sortType, 1, 20, genres),
     };
   },
 
